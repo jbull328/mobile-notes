@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, Text, TouchableHighlight } from 'react-native';
+import { View, StyleSheet, Text, TouchableHighlight, ActivityIndicator } from 'react-native';
 import { StackNavigator } from 'react-navigation';
 import { Fab, Icon } from 'native-base';
+import { graphql } from 'react-apollo';
+import gql from "graphql-tag"; 
 
 
 import Post from './components/posts/Post';
@@ -63,9 +65,25 @@ const Navigator = StackNavigator({
   }
 });
 
-const NavWrapper = (props) => {
-  return <Login />;  
-  return <Navigator />;
+const NavWrapper = ({ loading, user}) => {
+  if (loading) return <ActivityIndicator size="large" />;
+  if (!user) return <Login />; 
+  return <Navigator screenProps={{ user }} />; 
 }
 
-export default NavWrapper;
+const userQuery = gql`
+  query userQuery {
+    user {
+      id
+      email
+      posts(orderBy: createdAt_DESC) {
+        id
+        title
+      }
+    }
+  }
+`
+
+export default graphql(userQuery, {
+  props: ({data}) => ({ ...data })
+})(NavWrapper);
